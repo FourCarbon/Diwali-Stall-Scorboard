@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diwali Utsav • Game Arena</title>
+<!-- External Libraries: Three.js for 3D aerial animations & GSAP for sleek UI motion -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+:root {
+--site-primary:#8d1d31;
+--site-secondary:#f2b544;
+--site-background:#160b20;
+--site-on-primary:#fff8ed;
+--site-on-secondary:#261326;
+--site-on-background:#fff4e4;
+--site-font-body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+--site-font-heading:Georgia,"Times New Roman",serif;
+--site-heading-scale:1;
+--site-spacing-scale:1;
+--site-radius-scale:1;
+--site-decoration-opacity:1;
+--surface:#26152e;
+--surface2:#321b35;
+--gold:#ffd477;
+--cream:#fff4df;
+--muted:#cbb9c8;
+--pink:#ff7893;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--site-background);color:var(--site-on-background);font-family:var(--site-font-body);overflow-x:hidden}
+#app{min-height:100vh;width:100%;border-radius:0;background:radial-gradient(ellipse at 50% -20%,#71304a 0%,#28132f 43%,#130a1d 100%);position:relative;isolation:isolate;overflow:hidden}
+
+#canvas-3d {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.decor{position:absolute;inset:0;pointer-events:none;opacity:var(--site-decoration-opacity);z-index:0;overflow:hidden}
+.light-string{position:absolute;top:0;left:-5%;width:110%;height:78px;border-top:2px solid #b77b42;border-radius:50%;transform:rotate(-2deg)}
+.bulb{position:absolute;top:28px;width:10px;height:17px;border-radius:50% 50% 45% 45%;background:#ffd86e;box-shadow:0 0 9px 4px #ffcb5a,0 0 25px 8px #ff9c39;animation:twinkle 1.8s infinite alternate}
+.bulb:nth-child(2n){background:#ff7192;box-shadow:0 0 9px 4px #ff7192,0 0 25px 8px #f34c83;animation-delay:.6s}.bulb:nth-child(3n){background:#8de6c4;box-shadow:0 0 9px 4px #8de6c4,0 0 25px 8px #54d6b0;animation-delay:1s}
+@keyframes twinkle{from{opacity:.55;filter:brightness(.8)}to{opacity:1;filter:brightness(1.5)}}
+.spark{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffe4a0;box-shadow:0 0 10px 3px #ffb83f;animation:floatUp linear infinite}
+@keyframes floatUp{from{transform:translateY(105vh) scale(.5);opacity:0}15%{opacity:.9}to{transform:translateY(-10vh) scale(1.4);opacity:0}}
+
+header{position:relative;z-index:2;max-width:1180px;margin:auto;padding:26px 24px 8px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffe59b,#d98525);box-shadow:0 0 25px #f4a93b66;font-size:26px}.brand small{display:block;color:var(--gold);letter-spacing:3px;font-size:10px;font-weight:800}.brand strong{font-family:var(--site-font-heading);font-size:20px;color:#fff1d4}
+.live{border:1px solid #eab75b66;background:#4a2638aa;padding:9px 14px;border-radius:99px;color:#ffe5ae;font-size:12px;letter-spacing:1px}.live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7ef0ae;box-shadow:0 0 10px #7ef0ae;margin-right:7px}
+
+main{position:relative;z-index:2}
+.hero{text-align:center;padding:38px 20px 20px;max-width:1000px;margin:auto}.eyebrow{color:var(--gold);font-size:12px;letter-spacing:4px;font-weight:800}.hero h1{font-family:var(--site-font-heading);font-size:clamp(42px,7vw,76px);line-height:1.02;margin:16px 0 12px;color:#fff1d4;text-shadow:0 4px 28px #f7a93c55}.hero h1 span{color:#ffcf70;font-style:italic}.hero p{color:#ddc9d3;max-width:600px;margin:0 auto;line-height:1.7}.hero-actions{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:24px}
+
+.btn{border:0;border-radius:999px;padding:12px 20px;font-weight:800;cursor:pointer;transition:.25s transform,.25s box-shadow;font-size:13px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}.btn:hover{transform:translateY(-3px);box-shadow:0 10px 25px #0005}.btn-gold{background:linear-gradient(110deg,#ffe39a,#e99a32);color:#35182b}.btn-ghost{background:#ffffff0c;border:1px solid #ffe0a355;color:#ffe9c2}
+.btn-insta{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;border:none;box-shadow:0 4px 15px rgba(253,29,29,0.35);padding:12px 22px}
+.btn-insta:hover{box-shadow:0 8px 25px rgba(253,29,29,0.55)}
+
+.section{max-width:1120px;margin:34px auto;padding:0 22px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:20px}.section-head h2{font-family:var(--site-font-heading);font-size:clamp(26px,4vw,38px);margin:6px 0;color:#fff0d8}.section-head p{margin:0;color:var(--muted);font-size:13px}.section-kicker{font-size:10px;letter-spacing:3px;color:#e8b45c;font-weight:900}
+.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:end;max-width:850px;margin:24px auto 0}.winner-card{position:relative;text-align:center;padding:24px 15px 18px;border:1px solid #f5ce8050;border-radius:22px;background:linear-gradient(155deg,#593046dd,#28162feF);box-shadow:0 16px 35px #0004;animation:cardFloat 4s ease-in-out infinite;overflow:hidden}.winner-card:nth-child(2){animation-delay:.6s}.winner-card:nth-child(3){animation-delay:1.2s}.winner-card.first{padding-top:35px;padding-bottom:28px;background:linear-gradient(155deg,#79502f,#44233c);border-color:#ffd477aa;transform:translateY(-13px)}
+@keyframes cardFloat{0%,100%{translate:0 0}50%{translate:0 -9px}}
+.crown{font-size:32px;filter:drop-shadow(0 0 10px #ffce62)}.avatar{width:65px;height:65px;margin:10px auto;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffe5a4,#b96638);color:#482136;font-family:var(--site-font-heading);font-size:27px;font-weight:bold;border:3px solid #ffdb8a;box-shadow:0 0 22px #ffcf6c55}.first .avatar{width:78px;height:78px;font-size:33px}.winner-card h3{margin:8px 0 3px;font-size:18px;color:#fff3df;overflow-wrap:anywhere}.winner-card .score{color:#f4c66f;font-size:12px}.rank{display:inline-block;margin-top:13px;border-radius:99px;padding:6px 12px;background:#ffffff12;color:#ffe1a4;font-size:10px;letter-spacing:1px;font-weight:900}.winner-card.first .rank{background:#f6c45d;color:#3d2030}.podium-base{height:8px;border-radius:99px;margin-top:17px;background:linear-gradient(90deg,#9d5c37,#ffdc83,#9d5c37);opacity:.75}
+.empty{color:#d6c2cf;font-size:13px;padding:15px}.table-wrap{background:#24152cdd;border:1px solid #eac16a38;border-radius:20px;overflow:hidden;box-shadow:0 15px 40px #0003}.leader-table{width:100%;border-collapse:collapse;text-align:left}.leader-table th{font-size:10px;letter-spacing:2px;color:#e8b65d;padding:16px 20px;background:#ffffff08}.leader-table td{padding:15px 20px;border-top:1px solid #ffffff0d;color:#f6e8dd;font-size:13px}.leader-table td:first-child{color:#f4c66f;font-weight:900}.leader-table tr:hover td{background:#ffffff08}.score-pill{background:#f3c66e1c;color:#ffd985;padding:6px 10px;border-radius:99px;font-weight:800}
+
+/* Mini Game Section with Castle Silhouette Backdrop */
+.game-section {
+  position: relative;
+  max-width: 1120px;
+  margin: 50px auto 30px;
+  padding: 0 22px;
+}
+.game-card {
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 212, 119, 0.4);
+  background: radial-gradient(circle at 50% 30%, #3e1d3c 0%, #1a0b22 100%);
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 30px rgba(255, 120, 147, 0.15);
+}
+.castle-backdrop {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="none"><path fill="%23ffd477" d="M0 400 L0 300 L40 300 L40 280 L60 280 L60 300 L100 300 L100 240 L120 200 L140 240 L140 300 L180 300 L180 270 L220 270 L220 300 L300 300 L320 210 L350 150 L380 210 L400 300 L480 300 L480 250 L520 250 L520 180 L550 120 L580 180 L580 250 L620 250 L620 300 L700 300 L720 220 L750 160 L780 220 L800 300 L880 300 L880 260 L920 260 L920 300 L980 300 L1000 210 L1030 140 L1060 210 L1080 300 L1200 300 L1200 400 Z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 100% 70%;
+  filter: drop-shadow(0 -10px 25px rgba(255, 212, 119, 0.3));
+}
+.game-header {
+  position: relative;
+  z-index: 2;
+  padding: 24px 28px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.game-stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.stat-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255, 212, 119, 0.3);
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold);
+}
+#gameCanvas {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 340px;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.cracker{position:fixed;bottom:0;left:8%;width:95px;height:160px;pointer-events:none;opacity:var(--site-decoration-opacity);z-index:2}.cracker.right{left:auto;right:7%;transform:scale(.8)}.fountain{position:absolute;bottom:20px;left:50%;width:5px;height:5px;border-radius:50%;background:#ffd36d;box-shadow:0 0 10px 4px #ffb83e;animation:fountain 1.8s infinite}.fountain:before,.fountain:after{content:"";position:absolute;bottom:0;left:0;width:3px;height:100px;background:linear-gradient(to top,#ffca61,transparent);transform-origin:bottom;transform:rotate(-28deg);filter:drop-shadow(0 0 4px #ff9d31);animation:fan 1.8s infinite}.fountain:after{transform:rotate(28deg);animation-delay:.15s}@keyframes fan{0%{height:5px;opacity:0}20%{opacity:1}100%{height:110px;opacity:0}}@keyframes fountain{0%,100%{opacity:.4}50%{opacity:1;box-shadow:0 0 20px 9px #ff9e37}}
+footer{position:relative;z-index:2;text-align:center;padding:45px 20px 32px;color:#ad94a7;font-size:11px;letter-spacing:1px}footer span{color:#f4c66f}
+
+.modal-backdrop{position:fixed;inset:0;background:#09050ddd;backdrop-filter:blur(10px);z-index:20;display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.show{display:flex}.modal{width:min(600px,100%);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#3d213b,#1e1228);border:1px solid #f0c46c66;border-radius:24px;padding:24px;box-shadow:0 25px 90px #0009}.modal h2{font-family:var(--site-font-heading);font-size:29px;margin:0 0 7px;color:#ffe6b2}.modal p{color:#cbb8c9;font-size:13px;line-height:1.5}.field{display:grid;gap:6px;margin:13px 0}.field label{font-size:11px;color:#e8c88e;letter-spacing:1px;font-weight:800}.field input{width:100%;border:1px solid #e8c16a55;border-radius:12px;padding:12px 13px;background:#160e20;color:#fff3df;outline:none}.field input:focus{border-color:#ffd477;box-shadow:0 0 0 3px #ffd47720}.modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.admin-list{margin-top:15px;display:grid;gap:8px}.admin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#ffffff0b;border-radius:12px;font-size:13px}.admin-row button{border:0;background:#7b2c43;color:#fff;padding:7px 10px;border-radius:8px;cursor:pointer}.tiny{font-size:10px!important;color:#aa93a8!important}.poster{width:min(440px,100%);margin:14px auto;padding:28px 22px;text-align:center;border-radius:20px;border:2px solid #f6d486;background:radial-gradient(circle at top,#804a3b,#321b39 65%,#1c1028);box-shadow:0 15px 45px #0008;position:relative;overflow:hidden}.poster:before{content:"✦  ✧  ✦  ✧  ✦";display:block;color:#ffd477;letter-spacing:10px;font-size:14px}.poster .poster-diya{font-size:35px;margin:8px}.poster h2{font-size:29px;margin:8px 0;color:#ffe9b8}.poster .poster-name{font-family:var(--site-font-heading);font-size:35px;color:#ffcf70;overflow-wrap:anywhere;margin:12px 0}.poster .poster-position{font-weight:900;letter-spacing:4px;color:#fff1d9;font-size:14px}.poster .poster-event{color:#e4c8d5;font-size:13px;margin:10px 0 18px}.poster .poster-foot{font-size:10px;letter-spacing:3px;color:#f3c66f}
+
+@media(max-width:650px){header{padding:20px 16px}.brand strong{font-size:16px}.live{font-size:10px}.hero{padding-top:28px}.podium{gap:8px}.winner-card{padding:17px 7px 13px;border-radius:16px}.winner-card.first{padding-top:24px}.avatar{width:49px;height:49px;font-size:21px}.first .avatar{width:58px;height:58px}.winner-card h3{font-size:13px}.winner-card .score{font-size:10px}.rank{font-size:8px;padding:5px 7px}.leader-table th,.leader-table td{padding:13px 10px;font-size:11px}.cracker{left:-10px;transform:scale(.65);transform-origin:bottom left}.cracker.right{right:-10px}.section,.game-section{padding:0 14px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<!-- Background Three.js canvas for 3D aerial plane & helicopter -->
+<canvas id="canvas-3d"></canvas>
+
+<div id="app">
+ <div class="decor" aria-hidden="true"><div class="light-string"></div></div>
+ <div class="cracker"><div class="fountain"></div></div><div class="cracker right"><div class="fountain"></div></div>
+ <header><div class="brand"><div class="brand-mark">🪔</div><div><small>COLLEGE DIWALI FEST</small><strong>Diwali Game Arena</strong></div></div><div class="live"><i></i>LIVE SCOREBOARD</div></header>
+ <main>
+  <section class="hero">
+    <div class="eyebrow">✦ LIGHTS • GAMES • GLORY ✦</div>
+    <h1>Celebrate. Compete.<br><span>Shine Bright.</span></h1>
+    <p>One festival, countless memories. Cheer for your champions and watch the leaderboard light up as the game unfolds.</p>
+    <div class="hero-actions">
+      <button class="btn btn-gold" onclick="document.getElementById('rankings').scrollIntoView({behavior:'smooth'})">View leaderboard ↓</button>
+      <button class="btn btn-ghost" onclick="openAdmin()">✦ Team access</button>
+      <!-- Instagram Button next to View Leaderboard & Team Access -->
+      <a href="https://www.instagram.com/akash_jsd/" target="_blank" rel="noopener noreferrer" class="btn btn-insta">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Instagram
+      </a>
+    </div>
+  </section>
+
+  <section class="section" id="rankings">
+    <div class="section-head">
+      <div><div class="section-kicker">THE CHAMPIONS</div><h2>Winners' Podium</h2><p>Our top three stars of the celebration</p></div>
+      <div class="section-kicker">🏆 TOP 3</div>
+    </div>
+    <div class="podium" id="podium"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div><div class="section-kicker">THE RACE IS ON</div><h2>Live Leaderboard</h2><p>Every point brings you closer to the spotlight.</p></div>
+    </div>
+    <div class="table-wrap">
+      <table class="leader-table">
+        <thead><tr><th>RANK</th><th>PLAYER</th><th>EVENT</th><th>SCORE</th><th>POSTER</th></tr></thead>
+        <tbody id="leaderRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Magic Diwali Sparkler Catch Mini-Game Section with Castle Silhouette Backdrop -->
+  <section class="game-section">
+    <div class="game-card">
+      <div class="castle-backdrop"></div>
+      <div class="game-header">
+        <div>
+          <div class="section-kicker">INTERACTIVE FESTIVE FUN</div>
+          <h2 style="font-family:var(--site-font-heading);font-size:24px;margin:4px 0 0;color:#ffe6b2;">Magic Diwali Sparkler Catch</h2>
+        </div>
+        <div class="game-stats">
+          <div class="stat-box">SCORE: <span id="gameScore">0</span></div>
+          <div class="stat-box">COMBO: <span id="gameCombo">x1</span></div>
+        </div>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+    </div>
+  </section>
+ </main>
+ <footer>MADE WITH <span>♥</span> FOR THE FESTIVAL OF LIGHTS · <span>HAPPY DIWALI</span> 🪔</footer>
+</div>
+
+<div class="modal-backdrop" id="modal"><div class="modal" id="modalContent"></div></div>
+
+<script>
+/* ==========================================================================
+   ORIGINAL SITE LOGIC & ADMIN MANAGEMENT (WITH CLOUD SYNC)
+   ========================================================================== */
+const ADMIN_PIN='123456';
+const CLOUD_URL='TYPE YOUR API URL HERE';
+const defaultContent={college:'COLLEGE DIWALI FEST',brand:'Diwali Game Arena',heroKicker:'✦ LIGHTS • GAMES • GLORY ✦',heroTitle:'Celebrate. Compete.',heroHighlight:'Shine Bright.',heroDescription:'One festival, countless memories. Cheer for your champions and watch the leaderboard light up as the game unfolds.',podiumKicker:'THE CHAMPIONS',podiumTitle:"Winners' Podium",podiumDescription:'Our top three stars of the celebration',leaderKicker:'THE RACE IS ON',leaderTitle:'Live Leaderboard',leaderDescription:'Every point brings you closer to the spotlight.',footer:'MADE WITH ♥ FOR THE FESTIVAL OF LIGHTS · HAPPY DIWALI',posterBrand:'DIWALI GAME ARENA PRESENTS'};
+
+let content={...defaultContent};
+let players=[];
+
+async function loadCloudData(){
+  try{
+    const res=await fetch(CLOUD_URL);
+    const data=await res.json();
+    if(data){
+      if(Array.isArray(data.players)) players=data.players;
+      if(data.content) content={...defaultContent,...data.content};
+      renderSiteContent();
+      render();
+    }
+  }catch(e){
+    console.error("Cloud load error, using local fallback", e);
+  }
+}
+
+async function saveCloudData(){
+  try{
+    await fetch(CLOUD_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({players,content})
+    });
+  }catch(e){
+    console.error("Cloud save error", e);
+  }
+}
+
+async function saveContent(){
+  const fields=['college','brand','heroKicker','heroTitle','heroHighlight','heroDescription','podiumKicker','podiumTitle','podiumDescription','leaderKicker','leaderTitle','leaderDescription','footer','posterBrand'];
+  fields.forEach(k=>{const el=document.getElementById('content_'+k);if(el)content[k]=el.value.trim()});
+  renderSiteContent();
+  await saveCloudData();
+  adminPanel();
+}
+
+function renderSiteContent(){const set=(selector,value)=>{const el=document.querySelector(selector);if(el)el.textContent=value};set('.brand small',content.college);set('.brand strong',content.brand);set('.hero .eyebrow',content.heroKicker);const title=document.querySelector('.hero h1');if(title)title.innerHTML=esc(content.heroTitle)+'<br><span>'+esc(content.heroHighlight)+'</span>';set('.hero p',content.heroDescription);set('#rankings .section-kicker',content.podiumKicker);set('#rankings h2',content.podiumTitle);set('#rankings .section-head p',content.podiumDescription);const heads=document.querySelectorAll('main .section-head');if(heads[1]){heads[1].querySelector('.section-kicker').textContent=content.leaderKicker;heads[1].querySelector('h2').textContent=content.leaderTitle;heads[1].querySelector('p').textContent=content.leaderDescription}const footer=document.querySelector('footer');if(footer)footer.textContent=content.footer;document.title=content.brand+' • Diwali Utsav'}
+
+function sorted(){return [...players].sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name))}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){const list=sorted();const podium=document.getElementById('podium');const top=list.slice(0,3);const order=[top[1],top[0],top[2]];const positions=[2,1,3];podium.innerHTML=order.map((p,i)=>p?`<article class="winner-card ${positions[i]===1?'first':''}"><div class="crown">${positions[i]===1?'👑':positions[i]===2?'🥈':'🥉'}</div><div class="avatar">${esc(p.name.trim().charAt(0).toUpperCase()||'?')}</div><h3>${esc(p.name)}</h3><div class="score">${esc(p.event)} · ${p.score} pts</div><div class="rank">${positions[i]===1?'1ST PLACE':positions[i]===2?'2ND PLACE':'3RD PLACE'}</div><div class="podium-base"></div><button class="btn btn-ghost" style="padding:8px 12px;margin-top:8px;font-size:10px" onclick="showPoster('${p.id}')">Share winner card</button></article>`:`<article class="winner-card"><div class="crown">✨</div><div class="avatar">?</div><h3>Awaiting star</h3><div class="score">Add a player to begin</div><div class="rank">${positions[i]}${positions[i]===1?'ST':positions[i]===2?'ND':'RD'} PLACE</div><div class="podium-base"></div></article>`).join('');
+const rows=document.getElementById('leaderRows');rows.innerHTML=list.length?list.map((p,i)=>`<tr><td>#${i+1}</td><td><strong>${esc(p.name)}</strong></td><td>${esc(p.event)}</td><td><span class="score-pill">${p.score} pts</span></td><td><button class="btn btn-ghost" style="padding:8px 12px;font-size:10px" onclick="showPoster('${p.id}')">Share My Poster</button></td></tr>`).join(''):`<tr><td colspan="5" class="empty">The leaderboard is waiting for its first champion. Team, add your players from the admin panel!</td></tr>`;
+}
+function openModal(html){document.getElementById('modalContent').innerHTML=html;document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function openAdmin(){openModal(`<h2>🔐 Team Control Room</h2><p>Enter your team PIN to update scores and celebrate winners.</p><div class="field"><label>ADMIN PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="Enter 5-digit PIN" maxlength="20" onkeydown="if(event.key==='Enter')verifyPin()"></div><div class="modal-actions"><button class="btn btn-gold" onclick="verifyPin()">Unlock admin</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`);setTimeout(()=>document.getElementById('pinInput')?.focus(),50)}
+function verifyPin(){if(document.getElementById('pinInput').value!==ADMIN_PIN){alert('Incorrect PIN. Please try again.');return}adminPanel()}
+function adminPanel(){openModal(`<h2>✨ Admin Control Room</h2><p>Manage players, scores, event names and every public-facing text section from here.</p><h3 style="color:#ffd477;margin:20px 0 8px">🏆 Player & score management</h3><div class="field"><label>PLAYER NAME</label><input id="playerName" placeholder="e.g. Aanya Sharma"></div><div class="field"><label>EVENT NAME</label><input id="eventName" placeholder="e.g. Diya Dash Challenge" value="Diwali Game"></div><div class="field"><label>SCORE / POINTS</label><input id="playerScore" type="number" min="0" value="0"></div><div class="modal-actions"><button class="btn btn-gold" onclick="addPlayer()">＋ Add / update player</button></div><div class="admin-list" id="adminList">${adminRows()}</div><hr style="border:0;border-top:1px solid #ffffff22;margin:24px 0"><h3 style="color:#ffd477;margin:0 0 8px">✍️ Edit all website content</h3><p>Change the headings, descriptions, college name, footer and poster branding. Save to update the public preview.</p>${[['college','College / fest label'],['brand','Website name'],['heroKicker','Hero small heading'],['heroTitle','Hero main heading'],['heroHighlight','Hero highlighted heading'],['heroDescription','Hero description'],['podiumKicker','Podium small heading'],['podiumTitle','Podium title'],['podiumDescription','Podium description'],['leaderKicker','Leaderboard small heading'],['leaderTitle','Leaderboard title'],['leaderDescription','Leaderboard description'],['footer','Footer message'],['posterBrand','Winner poster brand']].map(([k,label])=>`<div class="field"><label>${label.toUpperCase()}</label><input id="content_${k}" value="${esc(content[k])}"></div>`).join('')}<div class="modal-actions"><button class="btn btn-gold" onclick="saveContent()">Save website content</button><button class="btn btn-ghost" onclick="closeModal()">Close</button></div><p class="tiny">Changes are saved globally to cloud storage and sync instantly across all devices.</p>`)}
+function adminRows(){return players.length?players.map(p=>`<div class="admin-row"><span><b>${esc(p.name)}</b><br><small>${esc(p.event)} · ${p.score} pts</small></span><button onclick="deletePlayer('${p.id}')">Remove</button></div>`).join(''):'<p class="tiny">No players added yet.</p>'}
+
+async function addPlayer(){
+  const name=document.getElementById('playerName').value.trim();
+  const event=document.getElementById('eventName').value.trim()||'Diwali Game';
+  const score=Number(document.getElementById('playerScore').value);
+  if(!name){alert('Please enter a player name.');return}
+  if(!Number.isFinite(score)||score<0){alert('Enter a valid score.');return}
+  const old=players.find(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(old){old.event=event;old.score=score}
+  else players.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,event,score});
+  render();
+  await saveCloudData();
+  adminPanel();
+}
+
+async function deletePlayer(id){
+  players=players.filter(p=>p.id!==id);
+  render();
+  await saveCloudData();
+  adminPanel();
+}
+
+function showPoster(id){const list=sorted(),p=list.find(x=>x.id===id);if(!p)return;const rank=list.findIndex(x=>x.id===id)+1;const place=rank===1?'1ST PLACE':rank===2?'2ND PLACE':rank===3?'3RD PLACE':`PARTICIPANT · RANK #${rank}`;const posterTitle=rank<=3?'🎉 Winner poster':'✨ Participant poster';const posterMessage=rank<=3?"Your champion's shareable celebration card is ready.":"Your participant shareable celebration card is ready.";openModal(`<h2>${posterTitle}</h2><p>${posterMessage}</p><div class="poster" id="poster"><div class="poster-diya">🪔✨</div><div class="poster-foot">${esc(content.posterBrand)}</div><h2>CONGRATULATIONS</h2><div class="poster-name">${esc(p.name)}</div><div class="poster-position">${place}</div><div class="poster-event">${esc(p.event)} · ${p.score} POINTS</div><div class="poster-diya">🏆</div><div class="poster-foot">SHINE BRIGHT · HAPPY DIWALI</div></div><div class="modal-actions" style="justify-content:center"><button class="btn btn-gold" onclick="downloadPoster()">⬇ Save poster</button><button class="btn btn-ghost" onclick="sharePoster()">↗ Share</button><button class="btn btn-ghost" onclick="closeModal()">Close</button></div><p class="tiny">Save as an image, then share it on Instagram, WhatsApp or your college group.</p>`)}
+
+async function posterBlob(){
+  const canvas = document.createElement('canvas');
+  // High-Resolution HD dimensions (1800 x 2200 for crystal clear social sharing)
+  canvas.width = 1800;
+  canvas.height = 2200;
+  const ctx = canvas.getContext('2d');
+
+  // Rich festive background gradient with radial festive glow
+  const bgGrad = ctx.createRadialGradient(900, 300, 50, 900, 1100, 1200);
+  bgGrad.addColorStop(0, '#7d384c');
+  bgGrad.addColorStop(0.45, '#351838');
+  bgGrad.addColorStop(1, '#11071c');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 1800, 2200);
+
+  // Decorative Diwali lamps / lights string at the top
+  ctx.fillStyle = '#ffd477';
+  ctx.strokeStyle = '#e8c16a';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, 100);
+  ctx.bezierCurveTo(450, 220, 1350, 220, 1800, 100);
+  ctx.stroke();
+
+  // Draw hanging glowing diyas / bulbs along top string
+  for(let i=1; i<=9; i++) {
+    const bx = i * 180;
+    const by = 100 + Math.sin((i / 9) * Math.PI) * 60;
+    
+    // Bulb glow
+    const bulbGlow = ctx.createRadialGradient(bx, by, 5, bx, by, 50);
+    bulbGlow.addColorStop(0, 'rgba(255, 212, 119, 0.9)');
+    bulbGlow.addColorStop(1, 'rgba(255, 120, 147, 0)');
+    ctx.fillStyle = bulbGlow;
+    ctx.beginPath();
+    ctx.arc(bx, by, 50, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Diya / Lamp icon
+    ctx.fillStyle = '#ffd477';
+    ctx.font = '36px Georgia';
+    ctx.textAlign = 'center';
+    ctx.fillText('🪔', bx, by + 15);
+  }
+
+  // Elegant golden decorative border
+  ctx.strokeStyle = '#f6d486';
+  ctx.lineWidth = 16;
+  ctx.strokeRect(50, 50, 1700, 2100);
+  
+  // Inner subtle accent border
+  ctx.strokeStyle = 'rgba(255, 212, 119, 0.35';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(74, 74, 1652, 2052);
+
+  // Corner floral/star ornaments
+  ctx.fillStyle = '#ffd477';
+  ctx.font = '45px Georgia';
+  ctx.textAlign = 'center';
+  ctx.fillText('✦  ✧  ✦  ✧  ✦', 900, 220);
+
+  // Brand Header
+  ctx.fillStyle = '#f3c66f';
+  ctx.font = 'bold 36px Arial';
+  ctx.letterSpacing = '6px';
+  ctx.fillText(content.posterBrand.toUpperCase(), 900, 330);
+
+  // Congratulations Title
+  ctx.fillStyle = '#fff0d1';
+  ctx.font = 'bold 84px Georgia';
+  ctx.fillText('CONGRATULATIONS', 900, 480);
+
+  // Gold Divider Ribbon
+  const ribbon = ctx.createLinearGradient(550, 530, 1250, 530);
+  ribbon.addColorStop(0, 'rgba(243, 198, 111, 0)');
+  ribbon.addColorStop(0.5, '#f3c66f');
+  ribbon.addColorStop(1, 'rgba(243, 198, 111, 0)');
+  ctx.fillStyle = ribbon;
+  ctx.fillRect(550, 530, 700, 4);
+
+  // Fetch player data from active modal or list
+  const activePosterEl = document.getElementById('poster');
+  const playerName = activePosterEl ? activePosterEl.querySelector('.poster-name').textContent : 'Champion';
+  const playerPosition = activePosterEl ? activePosterEl.querySelector('.poster-position').textContent : '1ST PLACE';
+  const playerEvent = activePosterEl ? activePosterEl.querySelector('.poster-event').textContent : 'Diwali Game · 100 PTS';
+
+  // Player Name with rich glow shadow
+  ctx.shadowColor = 'rgba(255, 207, 112, 0.6)';
+  ctx.shadowBlur = 35;
+  ctx.fillStyle = '#ffcf70';
+  ctx.font = 'bold 110px Georgia';
+  wrapText(ctx, playerName, 900, 780, 1500, 120);
+  ctx.shadowBlur = 0; // Reset shadow
+
+  // Position / Rank Badge Box
+  ctx.fillStyle = 'rgba(255, 212, 119, 0.15)';
+  ctx.strokeStyle = '#ffd477';
+  ctx.lineWidth = 4;
+  roundRect(ctx, 450, 930, 900, 130, 65, true, true);
+
+  ctx.fillStyle = '#fff1d9';
+  ctx.font = 'bold 50px Arial';
+  ctx.fillText(playerPosition, 900, 1015);
+
+  // Event & Score
+  ctx.fillStyle = '#e4c8d5';
+  ctx.font = '42px Arial';
+  wrapText(ctx, playerEvent, 900, 1210, 1500, 55);
+
+  // Center Trophy & Cracker Sparkle Art
+  ctx.font = '110px Arial';
+  ctx.fillText('🏆 ✨ 🪔 ✨ 🏆', 900, 1450);
+
+  // Decorative bottom firework burst representation
+  for(let i=0; i<12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const fx = 900 + Math.cos(angle) * 320;
+    const fy = 1750 + Math.sin(angle) * 120;
+    ctx.fillStyle = i % 2 === 0 ? '#ffd477' : '#ff7893';
+    ctx.beginPath();
+    ctx.arc(fx, fy, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Footer Tagline
+  ctx.fillStyle = '#f3c66f';
+  ctx.font = 'bold 34px Arial';
+  ctx.fillText('SHINE BRIGHT  ·  HAPPY DIWALI', 900, 1980);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){const words=text.split(' ');let line='',yy=y;for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){ctx.fillText(line,x,yy);line=word;yy+=lineHeight}else line=test}ctx.fillText(line,x,yy)}
+async function downloadPoster(){const blob=await posterBlob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='diwali-champion-poster-hd.png';a.click();URL.revokeObjectURL(a.href)}
+async function sharePoster(){const blob=await posterBlob();const file=new File([blob],'diwali-champion-poster-hd.png',{type:'image/png'});if(navigator.canShare?.({files:[file]})){try{await navigator.share({title:'Diwali Game Arena Winner',files:[file]})}catch(e){}}else{await downloadPoster();alert('HD Poster saved! You can now share it on Instagram, WhatsApp or your social stories.')}}
+document.addEventListener('keydown',e=>{if(e.shiftKey&&e.key.toLowerCase()==='a'){e.preventDefault();openAdmin()}if(e.key==='Escape')closeModal()});document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+const decor=document.querySelector('.decor');for(let i=0;i<28;i++){const s=document.createElement('i');s.className='spark';s.style.left=(Math.random()*100)+'%';s.style.animationDuration=(7+Math.random()*10)+'s';s.style.animationDelay=(-Math.random()*15)+'s';s.style.opacity=Math.random();decor.appendChild(s)}for(let i=0;i<22;i++){const b=document.createElement('i');b.className='bulb';b.style.left=(5+i*4.3)+'%';document.querySelector('.light-string').appendChild(b)}
+
+loadCloudData();
+
+/* ==========================================================================
+   WEB AUDIO API SYNTH SOUND GENERATOR
+   ========================================================================== */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new AudioCtx();
+  }
+}
+window.addEventListener('click', initAudio, { once: true });
+window.addEventListener('touchstart', initAudio, { once: true });
+
+function playSparkleSound() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(600 + Math.random() * 400, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1200 + Math.random() * 600, audioCtx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.15);
+}
+
+function playStarSound() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1600, audioCtx.currentTime + 0.25);
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.25);
+}
+
+function playExplosionSound() {
+  if (!audioCtx) return;
+  try {
+    const bufferSize = audioCtx.sampleRate * 0.5;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, audioCtx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.45);
+
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+
+    const subOsc = audioCtx.createOscillator();
+    const subGain = audioCtx.createGain();
+    subOsc.type = 'sawtooth';
+    subOsc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    subOsc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.4);
+
+    subGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+    subGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+    subOsc.connect(subGain);
+    subGain.connect(audioCtx.destination);
+
+    whiteNoise.start();
+    subOsc.start();
+    whiteNoise.stop(audioCtx.currentTime + 0.5);
+    subOsc.stop(audioCtx.currentTime + 0.4);
+  } catch(e){}
+}
+
+/* ==========================================================================
+   MAGIC DIWALI SPARKLER CATCH MINI-GAME
+   ========================================================================== */
+(function initSparklerGame() {
+  const canvas = document.getElementById('gameCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let score = 0;
+  let combo = 1;
+  let targets = [];
+  let sparkles = [];
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  class Target {
+    constructor() {
+      this.radius = 18 + Math.random() * 12;
+      this.x = this.radius + Math.random() * (canvas.width - this.radius * 2);
+      this.y = canvas.height + this.radius;
+      this.vy = -(2.5 + Math.random() * 3);
+      this.vx = (Math.random() - 0.5) * 1.8;
+      this.type = Math.random() > 0.35 ? 'diya' : 'star';
+      this.rotation = Math.random() * Math.PI * 2;
+      this.vRot = (Math.random() - 0.5) * 0.05;
+    }
+
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.rotation += this.vRot;
+      if (this.x < this.radius || this.x > canvas.width - this.radius) this.vx *= -1;
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+
+      if (this.type === 'diya') {
+        ctx.fillStyle = '#f2994a';
+        ctx.beginPath();
+        ctx.arc(0, 4, this.radius * 0.7, 0, Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#ffd477';
+        ctx.beginPath();
+        ctx.ellipse(0, -this.radius * 0.3, this.radius * 0.3, this.radius * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#ff7893';
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * this.radius, -Math.sin((18 + i * 72) * Math.PI / 180) * this.radius);
+          ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (this.radius / 2), -Math.sin((54 + i * 72) * Math.PI / 180) * (this.radius / 2));
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+
+  class SparkleParticle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.color = color;
+      this.vx = (Math.random() - 0.5) * 8;
+      this.vy = (Math.random() - 0.5) * 8;
+      this.alpha = 1;
+      this.size = 3 + Math.random() * 4;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.alpha -= 0.03;
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, this.alpha);
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function spawnTarget() {
+    if (targets.length < 6 && Math.random() < 0.04) {
+      targets.push(new Target());
+    }
+  }
+
+  function popTarget(index, px, py) {
+    const t = targets[index];
+    for (let i = 0; i < 15; i++) {
+      sparkles.push(new SparkleParticle(px, py, t.type === 'diya' ? '#ffd477' : '#ff7893'));
+    }
+    targets.splice(index, 1);
+    score += 10 * combo;
+    combo++;
+    document.getElementById('gameScore').textContent = score;
+    document.getElementById('gameCombo').textContent = 'x' + combo;
+
+    if (t.type === 'diya') playSparkleSound();
+    else playStarSound();
+  }
+
+  function handleInteraction(e) {
+    initAudio();
+    const rect = canvas.getBoundingClientRect();
+    const clickX = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const clickY = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+
+    let hit = false;
+    for (let i = targets.length - 1; i >= 0; i--) {
+      const dist = Math.hypot(targets[i].x - clickX, targets[i].y - clickY);
+      if (dist < targets[i].radius + 15) {
+        popTarget(i, clickX, clickY);
+        hit = true;
+        break;
+      }
+    }
+    if (!hit) {
+      combo = 1;
+      document.getElementById('gameCombo').textContent = 'x1';
+    }
+  }
+
+  canvas.addEventListener('mousedown', handleInteraction);
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInteraction(e); }, { passive: false });
+
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    spawnTarget();
+
+    for (let i = targets.length - 1; i >= 0; i--) {
+      targets[i].update();
+      targets[i].draw();
+      if (targets[i].y < -targets[i].radius * 2) {
+        targets.splice(i, 1);
+        combo = 1;
+        document.getElementById('gameCombo').textContent = 'x1';
+      }
+    }
+
+    for (let i = sparkles.length - 1; i >= 0; i--) {
+      sparkles[i].update();
+      sparkles[i].draw();
+      if (sparkles[i].alpha <= 0) sparkles.splice(i, 1);
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+  gameLoop();
+})();
+
+/* ==========================================================================
+   THREE.JS 3D AERIAL ANIMATIONS (1 BIPLANE + 1 HELICOPTER)
+   RANDOM CONTINUOUS LOOPING PATHS, COLLISION DETECTION, BURST POPUPS & EQUILIBRIUM
+   ========================================================================== */
+window.addEventListener('load', () => {
+  const canvas = document.getElementById('canvas-3d');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 50);
+
+  const ambientLight = new THREE.AmbientLight(0xffd477, 0.9);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xff7893, 1.4);
+  dirLight.position.set(20, 40, 20);
+  scene.add(dirLight);
+
+  function createBiplaneModel() {
+    const group = new THREE.Group();
+    const bodyGeo = new THREE.CylinderGeometry(1.1, 0.5, 5.8, 12);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff3b5c, roughness: 0.3, metalness: 0.1 });
+    const fuselage = new THREE.Mesh(bodyGeo, bodyMat);
+    fuselage.rotation.z = Math.PI / 2;
+    group.add(fuselage);
+
+    const wingGeo = new THREE.BoxGeometry(2.1, 0.12, 10.5);
+    const wingMat = new THREE.MeshStandardMaterial({ color: 0xffd477, roughness: 0.4 });
+    const topWing = new THREE.Mesh(wingGeo, wingMat);
+    topWing.position.set(0.4, 1.3, 0);
+    const botWing = new THREE.Mesh(wingGeo, wingMat);
+    botWing.position.set(0.4, -0.6, 0);
+    group.add(topWing, botWing);
+
+    const tailGeo = new THREE.BoxGeometry(1.1, 1.4, 0.18);
+    const tail = new THREE.Mesh(tailGeo, bodyMat);
+    tail.position.set(-2.5, 0.9, 0);
+    group.add(tail);
+
+    const propGroup = new THREE.Group();
+    propGroup.position.set(3.0, 0, 0);
+    const propGeo = new THREE.BoxGeometry(0.1, 3.2, 0.35);
+    const propMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    propGroup.add(new THREE.Mesh(propGeo, propMat));
+    group.add(propGroup);
+
+    return { group, propGroup };
+  }
+
+  function createHelicopterModel() {
+    const group = new THREE.Group();
+    const cabinGeo = new THREE.SphereGeometry(1.8, 16, 16);
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x00c8ff, roughness: 0.2 });
+    const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+    cabin.scale.set(1.45, 1.0, 1.0);
+    group.add(cabin);
+
+    const tailBoomGeo = new THREE.CylinderGeometry(0.25, 0.08, 4.2, 8);
+    const tailBoomMat = new THREE.MeshStandardMaterial({ color: 0xffd477 });
+    const tailBoom = new THREE.Mesh(tailBoomGeo, tailBoomMat);
+    tailBoom.rotation.z = Math.PI / 2;
+    tailBoom.position.set(-2.7, 0.15, 0);
+    group.add(tailBoom);
+
+    const mainRotorGroup = new THREE.Group();
+    mainRotorGroup.position.set(0, 2.0, 0);
+    const rotorBladeGeo = new THREE.BoxGeometry(7.8, 0.06, 0.45);
+    const rotorBladeMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    mainRotorGroup.add(new THREE.Mesh(rotorBladeGeo, rotorBladeMat));
+    group.add(mainRotorGroup);
+
+    const tailRotorGroup = new THREE.Group();
+    tailRotorGroup.position.set(-4.8, 0.4, 0.3);
+    const tailRotorGeo = new THREE.BoxGeometry(0.06, 1.7, 0.18);
+    tailRotorGroup.add(new THREE.Mesh(tailRotorGeo, rotorBladeMat));
+    group.add(tailRotorGroup);
+
+    return { group, mainRotorGroup, tailRotorGroup };
+  }
+
+  // Generate smooth closed looping CatmullRom curves ensuring continuous flight without endpoint snaps
+  function generateSeamlessCurve(isPlane) {
+    const points = [];
+    const numPoints = 6;
+    const xSpread = 65;
+    const ySpread = 32;
+    const zSpread = 20;
+
+    // Create a smooth orbit around the center with randomized offset waypoints
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * Math.PI * 2;
+      const radiusOffset = isPlane ? 12 : 8;
+      const x = Math.cos(angle) * (xSpread + (Math.random() - 0.5) * 15);
+      const y = Math.sin(angle * 2) * (ySpread * 0.5) + (Math.random() - 0.5) * 10;
+      const z = Math.sin(angle) * zSpread + (Math.random() - 0.5) * 10;
+      points.push(new THREE.Vector3(x, y, z));
+    }
+    return new THREE.CatmullRomCurve3(points, true, 'centripetal', 0.5);
+  }
+
+  class FlyingObject {
+    constructor(type, spawnFromSide = false) {
+      this.type = type;
+      this.isAlive = true;
+      this.progress = Math.random();
+      this.speed = (type === 'plane' ? 0.025 : 0.018) + Math.random() * 0.005;
+      this.curve = generateSeamlessCurve(type === 'plane');
+      this.spawnProgress = spawnFromSide ? 0 : 1;
+      this.isSpawning = spawnFromSide;
+
+      if (type === 'plane') {
+        const res = createBiplaneModel();
+        this.group = res.group;
+        this.propGroup = res.propGroup;
+      } else {
+        const res = createHelicopterModel();
+        this.group = res.group;
+        this.mainRotorGroup = res.mainRotorGroup;
+        this.tailRotorGroup = res.tailRotorGroup;
+      }
+
+      if (spawnFromSide) {
+        this.group.scale.set(0.01, 0.01, 0.01);
+      }
+      scene.add(this.group);
+    }
+
+    update(delta, time) {
+      if (!this.isAlive) return;
+
+      if (this.isSpawning) {
+        this.spawnProgress += delta * 1.5;
+        const scale = Math.min(1.0, this.spawnProgress);
+        this.group.scale.setScalar(scale);
+        if (this.spawnProgress >= 1.0) this.isSpawning = false;
+      }
+
+      // Spin propellers/rotors continuously
+      if (this.type === 'plane') {
+        this.propGroup.rotation.x += 0.8;
+      } else {
+        this.mainRotorGroup.rotation.y += 0.9;
+        this.tailRotorGroup.rotation.z += 0.9;
+      }
+
+      // Smooth looping progress along closed curve (0 to 1)
+      this.progress = (this.progress + delta * this.speed) % 1;
+
+      const pos = this.curve.getPointAt(this.progress);
+      const lookAhead = this.curve.getPointAt((this.progress + 0.01) % 1);
+
+      this.group.position.copy(pos);
+      const rotMatrix = new THREE.Matrix4();
+      rotMatrix.lookAt(pos, lookAhead, new THREE.Vector3(0, 1, 0));
+      this.group.quaternion.setFromRotationMatrix(rotMatrix);
+      this.group.rotateY(-Math.PI / 2);
+
+      if (this.type === 'plane') {
+        const nextAhead = this.curve.getPointAt((this.progress + 0.02) % 1);
+        const tangent = new THREE.Vector3().subVectors(lookAhead, pos).normalize();
+        const nextTangent = new THREE.Vector3().subVectors(nextAhead, lookAhead).normalize();
+        const bank = tangent.x * nextTangent.z - tangent.z * nextTangent.x;
+        this.group.rotateX(bank * 22);
+      } else {
+        this.group.rotateZ(-0.15);
+        this.group.rotateX(Math.sin(time * 5) * 0.08);
+      }
+    }
+
+    destroy() {
+      this.isAlive = false;
+      scene.remove(this.group);
+    }
+  }
+
+  const explosions = [];
+
+  function triggerExplosion(position) {
+    playExplosionSound();
+    const pGroup = new THREE.Group();
+    pGroup.position.copy(position);
+    const pGeo = new THREE.SphereGeometry(0.35, 6, 6);
+    const colors = [0xff3b5c, 0xff9c39, 0xffd477, 0xff7893];
+    const particles = [];
+
+    for (let i = 0; i < 50; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random() * colors.length)], transparent: true, opacity: 1 });
+      const mesh = new THREE.Mesh(pGeo, mat);
+      const velocity = new THREE.Vector3((Math.random() - 0.5) * 22, (Math.random() - 0.5) * 22, (Math.random() - 0.5) * 22);
+      pGroup.add(mesh);
+      particles.push({ mesh, velocity, life: 1.0, mat });
+    }
+
+    scene.add(pGroup);
+    explosions.push({ group: pGroup, particles });
+  }
+
+  function updateExplosions(delta) {
+    for (let i = explosions.length - 1; i >= 0; i--) {
+      const exp = explosions[i];
+      let active = false;
+      exp.particles.forEach(p => {
+        p.life -= delta * 2.2;
+        if (p.life > 0) {
+          active = true;
+          p.mesh.position.addScaledVector(p.velocity, delta);
+          p.mesh.scale.setScalar(p.life * 1.3);
+          p.mat.opacity = p.life;
+        } else {
+          p.mesh.visible = false;
+        }
+      });
+      if (!active) {
+        scene.remove(exp.group);
+        explosions.splice(i, 1);
+      }
+    }
+  }
+
+  // Exactly one biplane and one helicopter
+  let aircraftList = [
+    new FlyingObject('plane', false),
+    new FlyingObject('helicopter', false)
+  ];
+
+  function respawnAircraft(type) {
+    aircraftList.push(new FlyingObject(type, true));
+  }
+
+  function checkCollisions() {
+    if (aircraftList.length === 2) {
+      const c1 = aircraftList[0];
+      const c2 = aircraftList[1];
+      if (c1.isAlive && c2.isAlive && !c1.isSpawning && !c2.isSpawning) {
+        const dist = c1.group.position.distanceTo(c2.group.position);
+        if (dist < 4.2) {
+          const midPos = c1.group.position.clone().add(c2.group.position).multiplyScalar(0.5);
+          triggerExplosion(midPos);
+
+          const t1 = c1.type;
+          const t2 = c2.type;
+          c1.destroy();
+          c2.destroy();
+          aircraftList = [];
+
+          // Smoothly regenerate both aircraft from the sides via particle emission / scaling equilibrium
+          setTimeout(() => respawnAircraft(t1), 600);
+          setTimeout(() => respawnAircraft(t2), 1200);
+        }
+      }
+    }
+  }
+
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    const time = clock.getElapsedTime();
+
+    aircraftList.forEach(a => a.update(delta, time));
+    checkCollisions();
+    updateExplosions(delta);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+});
+</script>
+
+<!--sites-preview-theme:start-->
+<style data-sites-preview-theme></style>
+<script type="application/json" data-sites-preview-theme>{"appearance":"custom","primary":null,"secondary":null,"background":"#160b20","typography":"original","spacing":null,"roundness":null,"headingScale":null,"decorationOpacity":1}</script>
+<!--sites-preview-theme:end-->
+</body>
+</html>
